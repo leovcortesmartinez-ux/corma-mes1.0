@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../infrastructure/database/firebase';
 import { InventoryItem, type ItemCategory } from '../../../domain/entities/InventoryItem';
 import { ActiveLoan } from '../../../domain/entities/ActiveLoan';
 import { FirestoreInventoryRepository } from '../../../adapters/repositories/FirestoreInventoryRepository';
@@ -100,24 +98,15 @@ export const InventarioView = ({ onAlertsLoaded, userName = '' }: InventarioView
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [inventoryData, loansData, rawLoansSnap, usersData] = await Promise.all([
+      const [inventoryData, loansResult, usersData] = await Promise.all([
         inventoryRepository.getAll(),
-        loanRepository.getAll(),
-        getDocs(collection(db, 'loans')),
-        userRepository.getAll() 
+        loanRepository.getAllWithLife(),
+        userRepository.getAll()
       ]);
-      
-      const lifeByLoanId: Record<string, number> = {};
-      rawLoansSnap.docs.forEach(d => {
-        const data = d.data();
-        if (typeof data.lifePercentage === 'number') {
-          lifeByLoanId[d.id] = data.lifePercentage;
-        }
-      });
 
       setInventory(inventoryData);
-      setLoans(loansData);
-      setLoanLifeMap(lifeByLoanId);
+      setLoans(loansResult.loans);
+      setLoanLifeMap(loansResult.lifeMap);
 
       const activeOperators = usersData.filter(u => u.role === 'Operador').map(u => u.name);
       setOperators(activeOperators);
@@ -355,8 +344,6 @@ export const InventarioView = ({ onAlertsLoaded, userName = '' }: InventarioView
     if (!selectedItem) return;
     try {
       const loanedLife = selectedItem.checkoutUnit(selectedUnitIndex);
-      await inventoryRepository.save(selectedItem);
-
       const loanId = `loan-${Date.now()}`;
       const newLoan = new ActiveLoan(
         loanId,
@@ -366,8 +353,9 @@ export const InventarioView = ({ onAlertsLoaded, userName = '' }: InventarioView
         1,
         loanNotes
       );
-      await loanRepository.save(newLoan);
-      await updateDoc(doc(db, 'loans', loanId), { lifePercentage: loanedLife });
+
+      await loanRepository.save(newLoan, loanedLife);
+      await inventoryRepository.save(selectedItem);
 
       await logSystemEvent(
         'HERRAMIENTAS',
