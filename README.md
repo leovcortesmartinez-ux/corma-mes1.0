@@ -26,12 +26,24 @@ El sistema implementa Clean Architecture respetando la Regla de Dependencia, tod
 * src/adapters/repositories/ Interface Adapters: Implementaciones concretas de los puertos para Firebase Firestore (FirestoreUserRepository, FirestoreWorkOrderRepository, FirestoreInventoryRepository, FirestoreLoanRepository) y repositorios en memoria para pruebas (InMemoryUserRepository, InMemoryWorkOrderRepository).
 * src/infrastructure/ (Frameworks & Drivers): Configuración de Firebase (database/firebase.ts), bitácora del sistema (services/systemLogger.ts) e interfaz de usuario en React (ui/pages/Dashboard.tsx, ui/views/KanbanBoard.tsx, InventarioView.tsx, ControlView.tsx, RHView.tsx, HistorialView.tsx).
 
-## Cómo correrlo localmente
+## Acceso en Producción (Vercel)
 
-1. Requisitos:
-   * Node.js `v18+` y `npm` `v9+`
-   * Cuenta / proyecto activo en Firebase Firestore
+La aplicación se encuentra desplegada y disponible en línea a través de Vercel:
 
-2. **Configurar variables de entorno:**
+- URL de producción: https://corma-mes1-0.vercel.app
+- Despliegue continuo: Cada push a la rama principal en GitHub dispara automáticamente una nueva compilación y despliegue en Vercel.
+- Variables de entorno:** Las credenciales de Firebase Firestore se configuran en el panel del proyecto en Vercel (Settings > Environment Variables) y no se versionan en el repositorio.
+
+---
+
+## Cómo correrlo localmente (Desarrollo y pruebas)
+
+Si deseas ejecutar o modificar el proyecto en tu equipo local:
+
+1. **Requisitos:**
+   - Node.js `v18+` y `npm` `v9+`
+   - Proyecto activo en **Firebase Firestore**[cite: 62]
+
+2. **Instalar dependencias:**
    ```bash
-   cp .env.example .env
+   npm install
